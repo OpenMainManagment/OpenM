@@ -1,0 +1,24 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local data: databases, signing key, uploads
+*.db
+*.sqlite3
+OpenM_backend_python/database/
+OpenM_backend_python/storage/
+.env
+
+# Flutter
+OpenM_frontend_flutter/build/
+**/.dart_tool/
+**/ephemeral/
+OpenM_frontend_flutter/.idea/
+OpenM_frontend_flutter/.flutter-plugins-dependencies
+
+# Build output
+dist/
+.idea/
+.vscode/

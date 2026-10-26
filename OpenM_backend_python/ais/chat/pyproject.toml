@@ -1,0 +1,28 @@
+[project]
+name = "project_chatbot"
+version = "0.1.0"
+description = "project_chatbot using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[file-processing,litellm,tools]>=1.15.11,<2.0.0",
+]
+
+[project.scripts]
+project_chatbot = "project_chatbot.main:run"
+run_crew = "project_chatbot.main:run"
+train = "project_chatbot.main:train"
+replay = "project_chatbot.main:replay"
+test = "project_chatbot.main:test"
+run_with_trigger = "project_chatbot.main:run_with_trigger"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"
+project_id = "4fad12bd-d09d-464c-96fa-6c43605f5e20"
+
+[tool.uv]
+override-dependencies = ["litellm<=1.82.6"]

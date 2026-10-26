@@ -1,0 +1,13 @@
+{
+    "appTitle": "OpenM Admin Panel",
+    "addNewAction": "Neue Aktion hinzufügen",
+    "actions": "Aktionen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "confirm": "Bestätigen",
+    "areYouSure": "Sind Sie sicher?",
+    "yes": "Ja",
+    "no": "Nein"
+}

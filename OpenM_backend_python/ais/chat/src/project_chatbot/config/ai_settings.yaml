@@ -1,0 +1,18 @@
+# AI Configuration Settings
+# This file contains settings for the AI models used in the project chatbot
+
+# LM Studio configuration
+lm_studio:
+  base_url: "http://localhost:1234/v1"
+  model: "qwen3-14b"
+  api_key: "lm-studio"
+
+# Default settings for LLM usage
+llm_defaults:
+  reasoning: false
+  max_reasoning_attempts: null
+  inject_date: true
+  allow_delegation: false
+  max_iter: 25
+  max_rpm: null
+  max_execution_time: null

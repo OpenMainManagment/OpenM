@@ -1,0 +1,13 @@
+{
+    "appTitle": "OpenM Admin Panel",
+    "addNewAction": "Add New Action",
+    "actions": "Actions",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "confirm": "Confirm",
+    "areYouSure": "Are you sure?",
+    "yes": "Yes",
+    "no": "No"
+}

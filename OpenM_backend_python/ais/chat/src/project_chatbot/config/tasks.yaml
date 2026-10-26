@@ -1,0 +1,92 @@
+---
+classify_file_determine_target:
+  description: "A file named \"{file_name}\" has been uploaded by user {user_id} (role:
+    {user_role}).\n\nStep 1: Check if {confirmed_project_id} and {confirmed_folder_id}
+    are already provided. If both are set, skip classification and return them directly
+    as the confirmed target.\n\nStep 2 (if not confirmed): \n- Fetch available projects:
+    GET {api_base_url}/projects with header \"Authorization: Bearer {session_token}\"\n-
+    Fetch available folders: GET {api_base_url}/folders with header \"Authorization:
+    Bearer {session_token}\"\n- Analyze the file name \"{file_name}\" for keywords,
+    project numbers, abbreviations, or names that match any project or folder\n- Determine
+    the best matching project and folder based on naming similarity and context\n\nIf
+    one clear match is found: return the project_id and folder_id with high confidence.\nIf
+    multiple possible matches exist: return 2-3 options for the user to confirm.\nIf
+    no match is found: indicate that manual selection is required."
+  expected_output: |-
+    A structured result containing:
+    - confirmed_project_id: the determined or confirmed project ID
+    - confirmed_folder_id: the determined or confirmed folder ID
+    - confidence: "high" | "low" | "ambiguous"
+    - project_name and folder_name (human-readable)
+    - If ambiguous: a list of 2-3 candidate options with their IDs and names for the user to choose from
+  agent: file_classifier
+fetch_relevant_api_data:
+  description: |-
+    Analyze the user's question: "{user_message}" from user with ID {user_id} and role {user_role}.
+
+    1. Determine which data is needed to answer the question (e.g. projects, tasks, orders, documents, parts, etc.)
+    2. Map the question to the relevant REST API endpoints under {api_base_url}
+    3. Call each relevant endpoint using the Authorization header: "Bearer {session_token}"
+    4. Collect and structure the returned data
+    5. Filter out any data the user is not permitted to see based on their role {user_role} and ID {user_id}
+
+    Common endpoint examples (adapt based on actual API):
+    - Projects: {api_base_url}/projects
+    - Tasks/Todos: {api_base_url}/tasks
+    - Orders: {api_base_url}/orders
+    - Documents: {api_base_url}/documents
+  expected_output: A structured summary of the raw API data relevant to answering
+    the user's question. Include endpoint(s) called, HTTP status, and the filtered
+    data. If no relevant data was found or access was denied, clearly state that.
+  agent: rest_api_data_fetcher
+upload_file_to_project_folder:
+  description: |-
+    Upload the file "{file_name}" to the API using the project and folder determined in the previous classification task.
+
+    IMPORTANT: Only proceed with the upload if the classification confidence is "high" or if {confirmed_project_id} and {confirmed_folder_id} were explicitly provided. If confidence is "ambiguous", skip the upload and return a skip status — the user must confirm first.
+
+    Upload instructions:
+    - Endpoint: POST {api_base_url}/documents
+    - Authorization: Bearer {session_token}
+    - Method: multipart/form-data
+    - File source: prefer {file_base64} (decode from Base64 to binary), fall back to {file_url}
+    - Include: file binary, file_name, project_id (from classification), folder_id (from classification)
+
+    Handle the API response:
+    - On success: extract and return the document ID and confirmation details
+    - On error: return the HTTP status code and error message clearly
+  expected_output: |-
+    One of the following:
+    - SUCCESS: Document ID, file name, target project name, target folder name, upload timestamp
+    - SKIPPED: "Upload skipped — awaiting user confirmation of project/folder selection"
+    - ERROR: HTTP status code, error message, and suggested next steps
+  agent: file_uploader
+  context:
+  - classify_file_determine_target
+generate_user_response:
+  description: |-
+    Based on all previous task results, formulate a clear and helpful response for the user.
+
+    **Case A – File Upload Flow:**
+    If a file was uploaded ({file_name} is set):
+    1. If upload was SUCCESSFUL: Inform the user with ✅ — mention the file name, target project name, folder name, and document ID
+    2. If upload was SKIPPED (ambiguous classification): Ask the user ❓ to confirm the correct project/folder — present the 2-3 candidate options clearly so the user can respond with their choice (next trigger should include confirmed_project_id + confirmed_folder_id)
+    3. If upload FAILED: Inform the user with ❌ — show the error and suggest next steps
+
+    **Case B – Regular Chat Flow:**
+    If no file was uploaded, answer the user's question "{user_message}" based on the fetched API data:
+    1. If data was found: concise, friendly response with relevant details
+    2. If no data / access denied: polite explanation
+
+    Always respond in the same language as the user (German or English). Format in markdown.
+  expected_output: |-
+    A clear, markdown-formatted response in the user's language. Either:
+    - ✅ Upload confirmation with project name, folder name, and document ID
+    - ❓ Clarification request listing 2-3 project/folder options for the user to choose from
+    - ❌ Upload error message with next steps
+    - Or a direct answer to the user's chat question
+  agent: chatbot_responder
+  context:
+  - fetch_relevant_api_data
+  - classify_file_determine_target
+  - upload_file_to_project_folder
