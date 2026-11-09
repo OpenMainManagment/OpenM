@@ -29,7 +29,7 @@ class StatsWidget extends StatelessWidget {
             ),
             const SizedBox(height: 15),
             SizedBox(
-              height: 200,
+              height: 220,
               child: Column(
                 children: [
                   _buildStatRow('Active Users', '12', 0.8),

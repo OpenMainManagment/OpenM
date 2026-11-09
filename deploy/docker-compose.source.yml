@@ -1,0 +1,21 @@
+services:
+  backend:
+    build:
+      context: ../OpenM_backend_python
+      dockerfile: ../deploy/backend.Dockerfile
+    restart: unless-stopped
+    environment:
+      OPENM_SECRET_KEY: ${OPENM_SECRET_KEY:-}
+    volumes:
+      - ./data/database:/app/database
+      - ./data/storage:/data/storage
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/frontend.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${OPENM_PORT:-80}:80"

@@ -8,9 +8,8 @@ möchten. Die Anwendung verbindet Kundenverwaltung, Projektplanung,
 Dokumentenablage, Aufgaben, Beschaffung und Produktion in einer gemeinsamen
 Oberfläche.
 
-Dieses Repository enthält das Flutter-Frontend (`OpenM_frontend_flutter/`) und
-das Python-Backend (`OpenM_backend_python/`). Die REST-API wird separat
-gestartet.
+Das Repository enthält das Flutter-Frontend. Die dazugehörige REST-API liegt
+im separaten Backend-Projekt und wird separat gestartet.
 
 > **Hinweis:** OpenM befindet sich in aktiver Entwicklung. Einige Bereiche,
 > insbesondere Produktionskennzahlen, Zeiterfassung und die
@@ -116,6 +115,20 @@ registriert werden.
 - Gantt-Vorlagen
 - Projektaktionen und Workflows
 - Servereinstellungen für E-Mail und KI-Dienste
+
+## Screenshots
+
+Die Screenshots unter `screenshots/` zeigen die Kundenunternehmen,
+Projektübersicht und das Management-Dashboard mit synthetischen Beispieldaten.
+Sie enthalten keine Daten aus einer laufenden Backend-Instanz. Die Vorschau
+lässt sich lokal starten:
+
+```shell
+flutter run -d web-server -t lib/main_screenshot.dart
+```
+
+Im Browser `?screen=companies`, `?screen=projects` oder
+`?screen=dashboard` an die URL anhängen, um die jeweilige Ansicht zu öffnen.
 
 ## Architektur
 

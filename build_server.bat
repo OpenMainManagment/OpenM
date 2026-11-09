@@ -6,7 +6,25 @@ cd /d "%~dp0"
 :: (Flutter web build + backend source + Docker/nginx configuration).
 for /d %%D in ("%~dp0*backend*") do set "BACKEND_DIR=%%~fD"
 for /d %%D in ("%~dp0*frontend*") do set "FRONTEND_DIR=%%~fD"
-set "OUT=%~dp0dist\openm-server"
+if "%~1"=="" (
+    set "OUT=%~dp0dist\openm-server"
+) else (
+    set "OUT=%~f1"
+)
+
+if not defined BACKEND_DIR (
+    echo Backend folder not found.
+    exit /b 1
+)
+if not defined FRONTEND_DIR (
+    echo Frontend folder not found.
+    exit /b 1
+)
+if exist "%OUT%" (
+    echo Output already exists: %OUT%
+    echo Choose a new output directory to avoid overwriting existing files or data.
+    exit /b 1
+)
 
 echo Building Flutter web (API at /api)...
 pushd "%FRONTEND_DIR%"
@@ -19,8 +37,8 @@ if errorlevel 1 (
 popd
 
 echo Assembling %OUT% ...
-if exist "%OUT%" rmdir /s /q "%OUT%"
 mkdir "%OUT%\backend"
+if errorlevel 1 exit /b 1
 
 robocopy "%FRONTEND_DIR%\build\web" "%OUT%\web" /E /NFL /NDL /NJH /NJS >nul
 if errorlevel 8 exit /b 1
@@ -32,10 +50,15 @@ robocopy "%BACKEND_DIR%" "%OUT%\backend" /E /NFL /NDL /NJH /NJS ^
 if errorlevel 8 exit /b 1
 
 copy /y "%~dp0deploy\backend.Dockerfile" "%OUT%\" >nul
+if errorlevel 1 exit /b 1
 copy /y "%~dp0deploy\docker-compose.yml" "%OUT%\" >nul
+if errorlevel 1 exit /b 1
 copy /y "%~dp0deploy\nginx.conf" "%OUT%\" >nul
+if errorlevel 1 exit /b 1
 copy /y "%~dp0deploy\README.md" "%OUT%\" >nul
+if errorlevel 1 exit /b 1
 copy /y "%~dp0deploy\.env.example" "%OUT%\" >nul
+if errorlevel 1 exit /b 1
 
 echo.
 echo Done: %OUT%
