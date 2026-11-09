@@ -1,0 +1,11 @@
+**
+!OpenM_frontend_flutter/
+!OpenM_frontend_flutter/pubspec.yaml
+!OpenM_frontend_flutter/pubspec.lock
+!OpenM_frontend_flutter/lib/
+!OpenM_frontend_flutter/lib/**
+!OpenM_frontend_flutter/web/
+!OpenM_frontend_flutter/web/**
+!deploy/
+!deploy/nginx.conf
+!deploy/frontend.Dockerfile

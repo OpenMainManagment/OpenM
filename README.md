@@ -7,13 +7,44 @@ Super-Admin verwaltet.
 
 > OpenM befindet sich in aktiver Entwicklung.
 
+## Einblicke in die Anwendung
+
+Die folgenden Aufnahmen zeigen die echte Oberfläche mit **fiktiven
+Beispieldaten**. Es werden keine Kundendaten aus einer laufenden Instanz
+verwendet.
+
+### Kundenunternehmen und Aufgaben
+
+![Kundenunternehmen mit Aufgaben](OpenM_frontend_flutter/screenshots/customer-companies.png)
+
+### Projektübersicht und Fortschritt
+
+![Projektübersicht mit Workflow-Status](OpenM_frontend_flutter/screenshots/project-overview.png)
+
+### Management-Dashboard
+
+![Management-Dashboard mit Kennzahlen](OpenM_frontend_flutter/screenshots/management-dashboard.png)
+
+## Funktionen
+
+- Kundenunternehmen, Ansprechpartner und projektbezogene Dokumente verwalten.
+- Projekte vom Angebot bis zur Abnahme verfolgen und ihren Fortschritt anzeigen.
+- Angebote als PDF erzeugen, die Angebotsliste öffnen und ausgewählte Angebote
+  an Kundenkontakte senden.
+- Aufgaben, Kalender, Gantt-Planung, Beschaffung und Produktion unterstützen.
+- Mitarbeitende, Rollen, Vorlagen und Workflows zentral administrieren.
+
+Einige Funktionen, insbesondere Produktionskennzahlen und Zeiterfassung,
+befinden sich noch in Entwicklung. Das Dashboard enthält teilweise
+Beispielkennzahlen.
+
 ## Inhalt
 
 | Ordner | Beschreibung |
 |---|---|
 | [`OpenM_backend_python/`](OpenM_backend_python) | FastAPI-Backend mit SQLite |
 | [`OpenM_frontend_flutter/`](OpenM_frontend_flutter) | Flutter-App (Web/Desktop) – ausführliche Doku in der [README](OpenM_frontend_flutter/README.md) |
-| [`deploy/`](deploy) | Docker Compose + nginx für den Serverbetrieb |
+| [`deploy/`](deploy) | Docker-Builds, Compose und nginx für den Serverbetrieb |
 | `start_openm.bat` | Startet Backend und Frontend lokal (Windows) |
 | `build_server.bat` | Erstellt das Serverpaket `dist/openm-server` |
 
@@ -44,15 +75,35 @@ kann weitere Organisationen (optional mit eigenem Administrator) hinzufügen.
 Administratoren einer Organisation sehen und verwalten nur ihre eigene
 Organisation. Es gibt keine voreingestellten Zugangsdaten.
 
-## Auf einem Server betreiben
+## Mit Docker starten
+
+Mit laufender Docker Engine und Compose kann das Repository direkt gebaut
+und gestartet werden; ein lokal installiertes Flutter SDK ist dafür nicht
+erforderlich:
+
+```shell
+docker compose -f deploy/docker-compose.source.yml up -d --build
+docker compose -f deploy/docker-compose.source.yml ps
+```
+
+Die App ist anschließend unter `http://localhost` erreichbar. Der erste Build
+kann wegen des Downloads von Flutter und Python-Abhängigkeiten länger dauern.
+Optional `deploy/.env.example` nach `deploy/.env` kopieren und den Port oder
+Signaturschlüssel anpassen. Daten liegen dauerhaft unter `deploy/data/`.
+Für den Internetbetrieb ist ein HTTPS-Reverse-Proxy notwendig.
+
+## Vorgebautes Serverpaket
 
 ```powershell
 .\build_server.bat
 ```
 
-Der Ordner `dist/openm-server` auf den Server kopieren und dort
-`docker compose up -d --build` ausführen. Details und Hinweise zu Backups und
-HTTPS stehen in [`deploy/README.md`](deploy/README.md).
+Den Ordner `dist/openm-server` auf den Server kopieren und dort
+`docker compose up -d --build` ausführen. Das Skript überschreibt kein
+vorhandenes Ausgabe-Verzeichnis. Für weitere Builds kann ein neuer Zielpfad
+angegeben werden, zum Beispiel `.\build_server.bat dist\openm-server-neu`.
+Details zu beiden Varianten, Updates, Backups, HTTPS und Einschränkungen stehen
+in [`deploy/README.md`](deploy/README.md).
 
 ## Tests
 

@@ -20,5 +20,6 @@ OpenM_frontend_flutter/.flutter-plugins-dependencies
 
 # Build output
 dist/
+deploy/data/
 .idea/
 .vscode/
