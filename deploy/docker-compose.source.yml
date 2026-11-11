@@ -1,13 +1,40 @@
 services:
+  database:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${OPENM_DB_NAME:-openm}
+      POSTGRES_USER: ${OPENM_DB_USER:-openm}
+      POSTGRES_PASSWORD: ${OPENM_DB_PASSWORD:?Set OPENM_DB_PASSWORD in deploy/.env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
   backend:
     build:
       context: ../OpenM_backend_python
       dockerfile: ../deploy/backend.Dockerfile
     restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
     environment:
       OPENM_SECRET_KEY: ${OPENM_SECRET_KEY:-}
+      OPENM_DB_HOST: database
+      OPENM_DB_PORT: 5432
+      OPENM_DB_NAME: ${OPENM_DB_NAME:-openm}
+      OPENM_DB_USER: ${OPENM_DB_USER:-openm}
+      OPENM_DB_PASSWORD: ${OPENM_DB_PASSWORD:?Set OPENM_DB_PASSWORD in deploy/.env}
+      OPENM_STATE_ROOT: /data/state
+      OPENM_STORAGE_ROOT: /data/storage
     volumes:
-      - ./data/database:/app/database
+      - ./data/state:/data/state
       - ./data/storage:/data/storage
 
   web:
@@ -19,3 +46,6 @@ services:
       - backend
     ports:
       - "${OPENM_PORT:-80}:80"
+
+volumes:
+  postgres_data:

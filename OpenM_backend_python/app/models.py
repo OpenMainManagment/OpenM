@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, Enum, Float, ForeignKey, String, Text, UniqueConstraint, select
+from sqlalchemy import Boolean, Date, DateTime, Enum, Float, ForeignKey, String, Text, UniqueConstraint, select, text
 from sqlalchemy.types import TypeDecorator
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -177,7 +177,7 @@ class Employee(Base):
     department: Mapped[str | None] = mapped_column(String(100), nullable=True)
     # Super admins are regular Admins of their own organization who may
     # additionally create and manage other organizations.
-    is_super_admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    is_super_admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
 
     organization: Mapped["Organization | None"] = relationship(back_populates="employees")
 

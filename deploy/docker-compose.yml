@@ -1,15 +1,40 @@
 services:
+  database:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${OPENM_DB_NAME:-openm}
+      POSTGRES_USER: ${OPENM_DB_USER:-openm}
+      POSTGRES_PASSWORD: ${OPENM_DB_PASSWORD:?Set OPENM_DB_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
   backend:
     build:
       context: ./backend
       dockerfile: ../backend.Dockerfile
     restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
     environment:
       # Optional: fixed JWT signing key (min. 32 chars). If unset, one is
-      # generated once and stored in the database volume.
+      # generated once and stored in the state volume.
       OPENM_SECRET_KEY: ${OPENM_SECRET_KEY:-}
+      OPENM_DB_HOST: database
+      OPENM_DB_PORT: 5432
+      OPENM_DB_NAME: ${OPENM_DB_NAME:-openm}
+      OPENM_DB_USER: ${OPENM_DB_USER:-openm}
+      OPENM_DB_PASSWORD: ${OPENM_DB_PASSWORD:?Set OPENM_DB_PASSWORD in .env}
+      OPENM_STATE_ROOT: /data/state
+      OPENM_STORAGE_ROOT: /data/storage
     volumes:
-      - ./data/database:/app/database
+      - ./data/state:/data/state
       - ./data/storage:/data/storage
 
   web:
@@ -22,3 +47,6 @@ services:
     volumes:
       - ./web:/usr/share/nginx/html:ro
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  postgres_data:

@@ -14,8 +14,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-ENV OPENM_STORAGE_ROOT=/data/storage
-RUN mkdir -p /app/database /data/storage
+ENV OPENM_STORAGE_ROOT=/data/storage \
+    OPENM_STATE_ROOT=/data/state
+RUN mkdir -p /data/state /data/storage
 
 EXPOSE 8002
 CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8002", "--proxy-headers", "--forwarded-allow-ips", "*"]

@@ -10,7 +10,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
-from .database import DATABASE_DIR, get_db
+from .database import APP_DATA_DIR, get_db
 from .models import Employee
 
 
@@ -21,7 +21,7 @@ def _load_secret_key() -> str:
             raise RuntimeError("OPENM_SECRET_KEY must be at least 32 characters long")
         return configured_key
 
-    key_path = DATABASE_DIR / ".openm_jwt_secret"
+    key_path = APP_DATA_DIR / ".openm_jwt_secret"
     if key_path.exists():
         secret_key = key_path.read_text(encoding="utf-8").strip()
     else:

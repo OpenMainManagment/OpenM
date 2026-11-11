@@ -25,14 +25,9 @@ Base.metadata.create_all(bind=engine)
 
 
 def _sql_default_literal(value: object) -> str | None:
-    """Convert a Python default value into a valid SQL literal for the
-    ALTER TABLE ... DEFAULT clause. repr() is NOT safe here: repr(False)
-    is the string "False", which SQLite rejects as a column default (it
-    needs 0/1); repr() of a string also uses Python's quoting rules, not
-    SQL's. Returns None when the value can't be safely represented, in
-    which case the caller should add the column without a DEFAULT."""
+    """Convert a supported Python default into a portable SQL literal."""
     if isinstance(value, bool):
-        return "1" if value else "0"
+        return "TRUE" if value else "FALSE"
     if value is None:
         return "NULL"
     if isinstance(value, (int, float)):
@@ -54,9 +49,7 @@ def _sync_missing_columns() -> None:
 
     This must never be able to prevent the server from starting: any
     failure here is logged and swallowed rather than raised, and all
-    schema reads happen on a single connection *before* any ALTER TABLE
-    runs, to avoid a second connection colliding with an open write
-    transaction on file-based SQLite ("database is locked")."""
+    schema reads happen on a single connection before ALTER TABLE runs."""
     try:
         with engine.connect() as connection:
             inspector = inspect(connection)

@@ -42,7 +42,7 @@ Beispielkennzahlen.
 
 | Ordner | Beschreibung |
 |---|---|
-| [`OpenM_backend_python/`](OpenM_backend_python) | FastAPI-Backend mit SQLite |
+| [`OpenM_backend_python/`](OpenM_backend_python) | FastAPI-Backend mit PostgreSQL |
 | [`OpenM_frontend_flutter/`](OpenM_frontend_flutter) | Flutter-App (Web/Desktop) – ausführliche Doku in der [README](OpenM_frontend_flutter/README.md) |
 | [`deploy/`](deploy) | Docker-Builds, Compose und nginx für den Serverbetrieb |
 | `start_openm.bat` | Startet Backend und Frontend lokal (Windows) |
@@ -52,20 +52,26 @@ Beispielkennzahlen.
 
 - Python 3.13+
 - Flutter SDK (Web aktiviert)
+- PostgreSQL 17+ (oder Docker zum lokalen Start der Datenbank)
 - Optional: [`uv`](https://docs.astral.sh/uv/) und LM Studio für den KI-Chat-Assistenten
 - Für den Serverbetrieb: Docker mit Compose
 
 ## Lokal starten (Windows)
 
 ```powershell
+Copy-Item deploy\.env.example deploy\.env
+# OPENM_DB_PASSWORD in deploy\.env durch ein eigenes Passwort ersetzen.
+docker compose --env-file deploy\.env -f deploy\docker-compose.source.yml up -d database
+$env:OPENM_DB_PASSWORD = "das gleiche Passwort wie in deploy\.env"
+
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r OpenM_backend_python\requirements.txt
 .\start_openm.bat
 ```
 
 Das Backend läuft auf `http://localhost:8002`, das Frontend startet in Chrome.
-Die Datenbank (`OpenM_backend_python/database/openm.db`) wird beim ersten Start
-automatisch angelegt.
+Das Datenbankschema wird beim ersten Start in PostgreSQL angelegt. Bestehende
+SQLite-Daten werden nicht übernommen.
 
 ## Erste Einrichtung
 
@@ -82,14 +88,15 @@ und gestartet werden; ein lokal installiertes Flutter SDK ist dafür nicht
 erforderlich:
 
 ```shell
-docker compose -f deploy/docker-compose.source.yml up -d --build
-docker compose -f deploy/docker-compose.source.yml ps
+docker compose --env-file deploy/.env -f deploy/docker-compose.source.yml up -d --build
+docker compose --env-file deploy/.env -f deploy/docker-compose.source.yml ps
 ```
 
 Die App ist anschließend unter `http://localhost` erreichbar. Der erste Build
 kann wegen des Downloads von Flutter und Python-Abhängigkeiten länger dauern.
-Optional `deploy/.env.example` nach `deploy/.env` kopieren und den Port oder
-Signaturschlüssel anpassen. Daten liegen dauerhaft unter `deploy/data/`.
+Vor dem Start `deploy/.env.example` nach `deploy/.env` kopieren und
+`OPENM_DB_PASSWORD` setzen. PostgreSQL-Daten liegen in einem Docker-Volume;
+Dateien und der lokale Signaturschlüssel liegen unter `deploy/data/`.
 Für den Internetbetrieb ist ein HTTPS-Reverse-Proxy notwendig.
 
 ## Vorgebautes Serverpaket
@@ -119,7 +126,8 @@ flutter test
 
 | Variable | Bedeutung |
 |---|---|
-| `OPENM_SECRET_KEY` | JWT-Signaturschlüssel (mind. 32 Zeichen). Ohne Angabe wird einmalig einer erzeugt und in `database/` gespeichert. |
+| `OPENM_DB_NAME`, `OPENM_DB_USER`, `OPENM_DB_PASSWORD` | PostgreSQL-Datenbankname, Benutzer und Passwort. |
+| `OPENM_SECRET_KEY` | JWT-Signaturschlüssel (mind. 32 Zeichen). Ohne Angabe wird einmalig im Zustandsverzeichnis gespeichert. |
 | `OPENM_STORAGE_ROOT` | Speicherort für hochgeladene Dateien (siehe [`HOWTO_STORAGE_AND_MIGRATION.md`](OpenM_backend_python/HOWTO_STORAGE_AND_MIGRATION.md)) |
 | `API_BASE_URL` | Build-Zeit-Option des Frontends (`--dart-define`), Adresse des Backends |
 

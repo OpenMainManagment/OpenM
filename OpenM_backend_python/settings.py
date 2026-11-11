@@ -7,7 +7,10 @@ import os
 from typing import Optional
 
 # Database configuration
-DATABASE_URL = os.getenv("OpenM_DATABASE_URL", "sqlite:///./openm.db")
+DATABASE_URL = os.getenv(
+    "OPENM_DATABASE_URL",
+    "postgresql+psycopg://openm@localhost:5432/openm",
+)
 
 # Security settings
 SECRET_KEY = os.getenv("OPENM_SECRET_KEY")

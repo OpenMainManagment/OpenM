@@ -171,7 +171,7 @@ OpenM besteht aus zwei getrennten Komponenten:
 - [FastAPI](https://fastapi.tiangolo.com/)
 - SQLAlchemy
 - Pydantic
-- SQLite als lokale Standarddatenbank
+- PostgreSQL als Datenbank
 - JWT-basierte Authentifizierung
 
 ## Voraussetzungen
@@ -206,17 +206,15 @@ uvicorn app.main:app --reload --port 8002
 ```
 
 Die API ist danach standardmäßig unter
-`http://127.0.0.1:8002` erreichbar. Der Backend-Start legt die SQLite-
-Datenbank bei Bedarf im Datenbankverzeichnis des Backend-Projekts an.
-Falls dort noch eine ältere `bfsa.db` liegt und `openm.db` noch nicht
-existiert, übernimmt OpenM die Daten in eine neue `openm.db`. Die alte
-Datei bleibt erhalten; das alte Admin-Konto wird bis zur Vergabe eines
-neuen Passworts gesperrt.
+`http://127.0.0.1:8002` erreichbar. Vor dem Start muss PostgreSQL laufen. Die
+Verbindungsdaten werden über `OPENM_DB_HOST`, `OPENM_DB_PORT`, `OPENM_DB_NAME`,
+`OPENM_DB_USER` und `OPENM_DB_PASSWORD` konfiguriert. Bestehende SQLite-Daten
+werden nicht übernommen.
 
 Für JWT-Anmeldetokens verwendet das Backend `OPENM_SECRET_KEY`, wenn die
 Variable mit mindestens 32 Zeichen gesetzt ist. Andernfalls erzeugt OpenM
-ein zufälliges Signaturgeheimnis in `database/.openm_jwt_secret`. Datenbank
-und Schlüsseldatei sind lokale Laufzeitdateien und gehören nicht ins Git-
+ein zufälliges Signaturgeheimnis in `state/.openm_jwt_secret`. Datenbank
+und Schlüsseldatei sind Laufzeitdaten und gehören nicht ins Git-
 Repository.
 
 Für eine zentrale Dateiablage kann vor dem Start des Backends ein eigener

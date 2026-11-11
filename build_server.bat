@@ -45,7 +45,7 @@ if errorlevel 8 exit /b 1
 
 :: Backend source only: no venv, databases, uploads, caches or tests.
 robocopy "%BACKEND_DIR%" "%OUT%\backend" /E /NFL /NDL /NJH /NJS ^
-    /XD .venv .git .pytest_cache __pycache__ database storage tests ais ^
+    /XD .venv .git .pytest_cache __pycache__ database state storage tests ais ^
     /XF *.db *.pyc .gitignore .gitattributes >nul
 if errorlevel 8 exit /b 1
 

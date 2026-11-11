@@ -4,10 +4,11 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 
-# Local data: databases, signing key, uploads
+# Local data: databases, signing key and uploads
 *.db
 *.sqlite3
 OpenM_backend_python/database/
+OpenM_backend_python/state/
 OpenM_backend_python/storage/
 .env
 

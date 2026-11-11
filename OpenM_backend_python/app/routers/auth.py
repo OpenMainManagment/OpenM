@@ -4,12 +4,12 @@ from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
-from sqlalchemy import func
+from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..auth import create_access_token, get_current_employee, get_password_hash, verify_password
-from ..database import INITIAL_ADMIN_PASSWORD_REQUIRED, get_db
+from ..database import get_db
 from ..models import Department, Employee, Organization
 from ..schemas import (
     EmployeeLogin,
@@ -27,34 +27,12 @@ _EMPLOYEE_IMAGE_ROOT = resolve_storage_root() / "employee_images"
 _EMPLOYEE_IMAGE_ROOT.mkdir(parents=True, exist_ok=True)
 
 
-def _pending_legacy_admin(db: Session) -> Employee | None:
-    employee = (
-        db.query(Employee)
-        .filter(func.lower(Employee.login_name) == "admin")
-        .first()
-    )
-    if (
-        employee is not None
-        and (employee.role or "").lower() == "admin"
-        and employee.hashed_password == INITIAL_ADMIN_PASSWORD_REQUIRED
-    ):
-        return employee
-    return None
-
-
 @router.get("/setup/status")
 def get_setup_status(db: Session = Depends(get_db)):
-    pending_admin = _pending_legacy_admin(db)
     return {
-        "setup_required": (
-            db.query(Employee.id).first() is None or pending_admin is not None
-        ),
-        "legacy_admin_password_reset": pending_admin is not None,
-        "organization_name": (
-            pending_admin.organization.unique_name
-            if pending_admin is not None and pending_admin.organization is not None
-            else None
-        ),
+        "setup_required": db.query(Employee.id).first() is None,
+        "legacy_admin_password_reset": False,
+        "organization_name": None,
     }
 
 
@@ -63,61 +41,42 @@ def initialize_application(
     payload: InitialSetupRequest,
     db: Session = Depends(get_db),
 ):
-    if db.get_bind().dialect.name == "sqlite":
-        db.connection().exec_driver_sql("BEGIN IMMEDIATE")
+    if db.get_bind().dialect.name == "postgresql":
+        db.execute(text("SELECT pg_advisory_xact_lock(728194203)"))
 
     has_employees = db.query(Employee.id).first() is not None
-    pending_admin = _pending_legacy_admin(db) if has_employees else None
-    if has_employees and pending_admin is None:
+    if has_employees:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Initial setup has already been completed",
         )
 
     password_hash = get_password_hash(payload.password)
-    if pending_admin is not None:
-        admin_employee = pending_admin
-        organization = db.get(Organization, pending_admin.organization_id)
-        if organization is None:
-            organization = Organization(
-                unique_name=payload.organization_name,
-                unique_code=f"ORG-{uuid4().hex[:8].upper()}",
-            )
-            db.add(organization)
-            db.flush()
-            admin_employee.organization_id = organization.id
-        admin_employee.first_name = payload.first_name
-        admin_employee.last_name = payload.last_name
-        admin_employee.email = str(payload.email)
-        admin_employee.login_name = payload.login_name
-        admin_employee.hashed_password = password_hash
-        admin_employee.is_super_admin = True
-    else:
-        organization = (
-            db.query(Organization)
-            .filter(Organization.unique_name == payload.organization_name)
-            .first()
+    organization = (
+        db.query(Organization)
+        .filter(Organization.unique_name == payload.organization_name)
+        .first()
+    )
+    if organization is None:
+        organization = Organization(
+            unique_name=payload.organization_name,
+            unique_code=f"ORG-{uuid4().hex[:8].upper()}",
         )
-        if organization is None:
-            organization = Organization(
-                unique_name=payload.organization_name,
-                unique_code=f"ORG-{uuid4().hex[:8].upper()}",
-            )
-            db.add(organization)
-            db.flush()
+        db.add(organization)
+        db.flush()
 
-        admin_employee = Employee(
-            organization_id=organization.id,
-            first_name=payload.first_name,
-            last_name=payload.last_name,
-            email=str(payload.email),
-            login_name=payload.login_name,
-            hashed_password=password_hash,
-            role="Admin",
-            department="Management",
-            is_super_admin=True,
-        )
-        db.add(admin_employee)
+    admin_employee = Employee(
+        organization_id=organization.id,
+        first_name=payload.first_name,
+        last_name=payload.last_name,
+        email=str(payload.email),
+        login_name=payload.login_name,
+        hashed_password=password_hash,
+        role="Admin",
+        department="Management",
+        is_super_admin=True,
+    )
+    db.add(admin_employee)
 
     try:
         db.commit()

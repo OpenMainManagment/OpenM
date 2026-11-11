@@ -140,6 +140,7 @@ venv.bak/
 database/*.db
 database/*.db-*
 database/.openm_jwt_secret
+state/.openm_jwt_secret
 
 # Spyder project settings
 .spyderproject

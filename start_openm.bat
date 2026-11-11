@@ -29,6 +29,11 @@ if not exist "%VENV_DIR%\Scripts\python.exe" (
     echo Python virtual environment not found: %VENV_DIR%
     exit /b 1
 )
+if not defined OPENM_DB_PASSWORD (
+    echo OPENM_DB_PASSWORD must be set to the PostgreSQL password.
+    exit /b 1
+)
+if not defined OPENM_DB_HOST set "OPENM_DB_HOST=localhost"
 
 where uv >nul 2>nul
 if errorlevel 1 (
