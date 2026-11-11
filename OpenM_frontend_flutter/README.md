@@ -8,9 +8,8 @@ möchten. Die Anwendung verbindet Kundenverwaltung, Projektplanung,
 Dokumentenablage, Aufgaben, Beschaffung und Produktion in einer gemeinsamen
 Oberfläche.
 
-Dieses Repository enthält das Flutter-Frontend (`OpenM_frontend_flutter/`) und
-das Python-Backend (`OpenM_backend_python/`). Die REST-API wird separat
-gestartet.
+Das Repository enthält das Flutter-Frontend. Die dazugehörige REST-API liegt
+im separaten Backend-Projekt und wird separat gestartet.
 
 > **Hinweis:** OpenM befindet sich in aktiver Entwicklung. Einige Bereiche,
 > insbesondere Produktionskennzahlen, Zeiterfassung und die
@@ -119,16 +118,17 @@ registriert werden.
 
 ## Screenshots
 
-Die Screenshots unter `screenshots/` zeigen Kundenunternehmen, Projektübersicht
-und Management-Dashboard mit synthetischen Beispieldaten. Die Vorschau lässt
-sich lokal im Frontend-Verzeichnis starten:
+Die Screenshots unter `screenshots/` zeigen die Kundenunternehmen,
+Projektübersicht und das Management-Dashboard mit synthetischen Beispieldaten.
+Sie enthalten keine Daten aus einer laufenden Backend-Instanz. Die Vorschau
+lässt sich lokal starten:
 
 ```shell
 flutter run -d web-server -t lib/main_screenshot.dart
 ```
 
-An die Browser-URL `?screen=companies`, `?screen=projects` oder
-`?screen=dashboard` anhängen, um die jeweilige Ansicht zu öffnen.
+Im Browser `?screen=companies`, `?screen=projects` oder
+`?screen=dashboard` an die URL anhängen, um die jeweilige Ansicht zu öffnen.
 
 ## Architektur
 
@@ -202,20 +202,21 @@ Set-Location $backend.FullName
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
+$env:OPENM_DB_PASSWORD = "<PostgreSQL-Passwort>"
 uvicorn app.main:app --reload --port 8002
 ```
 
 Die API ist danach standardmäßig unter
-`http://127.0.0.1:8002` erreichbar. Vor dem Start muss PostgreSQL laufen. Die
-Verbindungsdaten werden über `OPENM_DB_HOST`, `OPENM_DB_PORT`, `OPENM_DB_NAME`,
-`OPENM_DB_USER` und `OPENM_DB_PASSWORD` konfiguriert. Bestehende SQLite-Daten
-werden nicht übernommen.
+`http://127.0.0.1:8002` erreichbar. PostgreSQL muss laufen und die
+Datenbank bereits existieren; das Backend legt die Tabellen beim Start an.
+Verbindung über `OPENM_DB_HOST`, `OPENM_DB_PORT`, `OPENM_DB_NAME`,
+`OPENM_DB_USER`, `OPENM_DB_PASSWORD` oder `OPENM_DATABASE_URL` konfigurieren.
+Bestehende SQLite-Daten werden nicht automatisch übernommen.
 
 Für JWT-Anmeldetokens verwendet das Backend `OPENM_SECRET_KEY`, wenn die
 Variable mit mindestens 32 Zeichen gesetzt ist. Andernfalls erzeugt OpenM
-ein zufälliges Signaturgeheimnis in `state/.openm_jwt_secret`. Datenbank
-und Schlüsseldatei sind Laufzeitdaten und gehören nicht ins Git-
-Repository.
+ein zufälliges Signaturgeheimnis in `state/.openm_jwt_secret`. Daten und
+Schlüsseldatei gehören nicht ins Git-Repository.
 
 Für eine zentrale Dateiablage kann vor dem Start des Backends ein eigener
 Speicherort gesetzt werden:

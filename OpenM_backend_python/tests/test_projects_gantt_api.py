@@ -3,25 +3,23 @@ import sys
 
 from fastapi.testclient import TestClient
 import pytest
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.auth import get_current_employee, get_current_manager_or_admin
 from app.database import Base, get_db
-from app.main import app
 from app.models import Company, Employee, Project, ProjectStatus, Todo
 
 
 @pytest.fixture()
-def api_client_with_db():
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
+def api_client_with_db(postgres_engine, monkeypatch):
+    import app.database
+
+    monkeypatch.setattr(app.database, "engine", postgres_engine)
+    from app.main import app
+
+    engine = postgres_engine
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     Base.metadata.create_all(bind=engine)
 

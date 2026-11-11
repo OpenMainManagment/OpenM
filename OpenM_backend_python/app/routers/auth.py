@@ -20,6 +20,7 @@ from ..schemas import (
     Token,
 )
 from ..services.storage_paths import resolve_storage_root
+from ..services.initial_setup import is_initial_setup_required
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -30,7 +31,7 @@ _EMPLOYEE_IMAGE_ROOT.mkdir(parents=True, exist_ok=True)
 @router.get("/setup/status")
 def get_setup_status(db: Session = Depends(get_db)):
     return {
-        "setup_required": db.query(Employee.id).first() is None,
+        "setup_required": is_initial_setup_required(db),
         "legacy_admin_password_reset": False,
         "organization_name": None,
     }
@@ -44,8 +45,7 @@ def initialize_application(
     if db.get_bind().dialect.name == "postgresql":
         db.execute(text("SELECT pg_advisory_xact_lock(728194203)"))
 
-    has_employees = db.query(Employee.id).first() is not None
-    if has_employees:
+    if not is_initial_setup_required(db):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Initial setup has already been completed",

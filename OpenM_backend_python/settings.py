@@ -6,11 +6,7 @@ This file contains the core configuration values for the OpenM backend applicati
 import os
 from typing import Optional
 
-# Database configuration
-DATABASE_URL = os.getenv(
-    "OPENM_DATABASE_URL",
-    "postgresql+psycopg://openm@localhost:5432/openm",
-)
+from app.database import DATABASE_URL
 
 # Security settings
 SECRET_KEY = os.getenv("OPENM_SECRET_KEY")

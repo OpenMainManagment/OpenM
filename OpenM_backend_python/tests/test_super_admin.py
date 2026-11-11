@@ -4,9 +4,7 @@ import sys
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -42,12 +40,8 @@ NEW_ORGANIZATION = {
 
 
 @pytest.fixture()
-def client_and_session():
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
+def client_and_session(postgres_engine):
+    engine = postgres_engine
     Base.metadata.create_all(bind=engine)
     session_factory = sessionmaker(bind=engine)
 
@@ -64,7 +58,6 @@ def client_and_session():
             yield client, session_factory
     finally:
         api_app.dependency_overrides.clear()
-        engine.dispose()
 
 
 def _auth(token: str) -> dict:

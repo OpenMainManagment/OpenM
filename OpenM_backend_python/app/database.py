@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 from sqlalchemy import MetaData, create_engine
-from sqlalchemy.engine import URL
+from sqlalchemy.engine import URL, make_url
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 APP_DATA_DIR = Path(
@@ -21,6 +21,9 @@ DATABASE_URL = os.getenv("OPENM_DATABASE_URL") or URL.create(
     port=int(os.getenv("OPENM_DB_PORT", "5432")),
     database=os.getenv("OPENM_DB_NAME", "openm"),
 )
+
+if make_url(DATABASE_URL).get_backend_name() != "postgresql":
+    raise ValueError("OPENM_DATABASE_URL must use PostgreSQL")
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

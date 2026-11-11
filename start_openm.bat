@@ -1,9 +1,51 @@
 @echo off
+setlocal
 cd /d "%~dp0"
 echo Starting OpenM Backend and Frontend...
 
-:: Start LM Studio's local server for the AI chat assistant (optional —
-:: only runs if the LM Studio CLI ("lms") is installed and on PATH).
+set "BACKEND_DIR=%~dp0OpenM_backend_python"
+set "FRONTEND_DIR=%~dp0OpenM_frontend_flutter"
+set "VENV_DIR=%~dp0.venv"
+if not exist "%BACKEND_DIR%\." (
+    echo Backend folder not found: "%BACKEND_DIR%"
+    exit /b 1
+)
+if not exist "%FRONTEND_DIR%\." (
+    echo Frontend folder not found: "%FRONTEND_DIR%"
+    exit /b 1
+)
+if not exist "%VENV_DIR%\Scripts\python.exe" (
+    echo Python virtual environment not found: %VENV_DIR%
+    exit /b 1
+)
+if /I "%~1"=="--with-env" goto configured
+"%VENV_DIR%\Scripts\python.exe" "%BACKEND_DIR%\launch_local.py"
+exit /b %errorlevel%
+:configured
+if not defined PGCONNECT_TIMEOUT set "PGCONNECT_TIMEOUT=5"
+echo Checking PostgreSQL connection and initial setup...
+pushd "%BACKEND_DIR%"
+if errorlevel 1 (
+    echo Cannot access the backend folder.
+    exit /b 1
+)
+"%VENV_DIR%\Scripts\python.exe" -m app.check_initial_setup
+if errorlevel 1 (
+    popd
+    echo PostgreSQL connection or setup status check failed. Check the error above, the server, database and credentials.
+    echo Configure OPENM_DATABASE_URL or OPENM_DB_HOST, OPENM_DB_PORT, OPENM_DB_NAME, OPENM_DB_USER and OPENM_DB_PASSWORD.
+    echo OpenM was not started.
+    exit /b 1
+)
+"%VENV_DIR%\Scripts\python.exe" -m app.startup_readiness check-port
+if errorlevel 1 (
+    popd
+    echo OpenM was not started. Check the existing process using port 8002.
+    exit /b 1
+)
+popd
+
+:: Start LM Studio's local server for the optional AI chat assistant.
 where lms >nul 2>nul
 if %errorlevel%==0 (
     echo Starting LM Studio server...
@@ -12,29 +54,7 @@ if %errorlevel%==0 (
     echo LM Studio CLI ^(lms^) not found on PATH — skipping AI chat server startup.
 )
 
-:: Prepare the ais/chat AI assistant's own uv project/venv (separate from
-:: OpenM's root .venv). Done before activating the backend environment.
-for /d %%D in ("%~dp0*backend*") do set "BACKEND_DIR=%%~fD"
-for /d %%D in ("%~dp0*frontend*") do set "FRONTEND_DIR=%%~fD"
-for %%D in ("%~dp0.venv") do set "VENV_DIR=%%~fD"
-if not defined BACKEND_DIR (
-    echo Backend folder not found.
-    exit /b 1
-)
-if not defined FRONTEND_DIR (
-    echo Frontend folder not found.
-    exit /b 1
-)
-if not exist "%VENV_DIR%\Scripts\python.exe" (
-    echo Python virtual environment not found: %VENV_DIR%
-    exit /b 1
-)
-if not defined OPENM_DB_PASSWORD (
-    echo OPENM_DB_PASSWORD must be set to the PostgreSQL password.
-    exit /b 1
-)
-if not defined OPENM_DB_HOST set "OPENM_DB_HOST=localhost"
-
+:: Prepare the chat assistant's separate uv project before activating the backend environment.
 where uv >nul 2>nul
 if errorlevel 1 (
     echo uv not found on PATH — skipping AI chat assistant environment setup.
@@ -67,17 +87,25 @@ echo Starting Backend...
 start "Backend Server" /D "%BACKEND_DIR%" cmd /k "python -m uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload"
 cd /d "%~dp0"
 
-:: Wait a moment for backend to start
-timeout /t 3 /nobreak >nul
+:: Wait for the backend to finish database initialization before launching Flutter.
+pushd "%BACKEND_DIR%"
+"%VENV_DIR%\Scripts\python.exe" -m app.startup_readiness wait
+if errorlevel 1 (
+    popd
+    echo Backend did not become ready. Check the Backend Server window for errors.
+    echo Frontend was not started.
+    exit /b 1
+)
+popd
 
 :: Start Frontend in web mode
 echo Starting Frontend...
-start "Frontend App" cmd /k "cd /d %FRONTEND_DIR% && flutter run -d chrome"
+start "Frontend App" /D "%FRONTEND_DIR%" cmd /k "flutter run -d chrome"
 
 
 
 echo.
-echo Both applications are now running:
+echo Backend is ready and the frontend launch was requested:
 echo Backend: http://localhost:8002
 
 pause

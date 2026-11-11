@@ -29,15 +29,21 @@ _CUSTOMER_IMAGE_ROOT.mkdir(parents=True, exist_ok=True)
 
 
 def _raise_company_conflict_from_integrity_error(exc: IntegrityError) -> None:
-    message = str(getattr(exc, "orig", exc)).lower()
-    if "customer_companies.unique_name" in message:
+    original = exc.orig
+    diag = getattr(original, "diag", None)
+    constraint = getattr(diag, "constraint_name", None)
+    if getattr(original, "sqlstate", None) != "23505":
+        raise HTTPException(status_code=400, detail="Company data violates database constraints") from exc
+    if constraint == "ix_customer_companies_unique_name":
         raise HTTPException(status_code=409, detail="A client company with this name already exists") from exc
-    if "customer_companies.unique_code" in message:
+    if constraint == "ix_customer_companies_unique_code":
         raise HTTPException(status_code=409, detail="A client company with this code already exists") from exc
-    if "organizations.unique_name" in message:
+    if constraint == "ix_organizations_unique_name":
         raise HTTPException(status_code=409, detail="A company with this name already exists") from exc
-    if "organizations.unique_code" in message:
+    if constraint == "ix_organizations_unique_code":
         raise HTTPException(status_code=409, detail="A company with this code already exists") from exc
+    if constraint in {"ix_employees_email", "ix_employees_login_name"}:
+        raise HTTPException(status_code=409, detail="An employee with this email or login name already exists") from exc
     raise HTTPException(status_code=400, detail="Company data violates database constraints") from exc
 
 
@@ -354,9 +360,6 @@ def create_company(
         db.commit()
     except IntegrityError as exc:
         db.rollback()
-        message = str(getattr(exc, "orig", exc)).lower()
-        if "employees." in message:
-            raise HTTPException(status_code=409, detail="An employee with this email or login name already exists") from exc
         _raise_company_conflict_from_integrity_error(exc)
 
     db.refresh(organization)

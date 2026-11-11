@@ -30,8 +30,10 @@ class AuthState {
 
 class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier() : super(const AuthState()) {
-    _restoreSession();
+    ready = _restoreSession();
   }
+
+  late final Future<void> ready;
 
   Future<void> _restoreSession() async {
     try {

@@ -6,11 +6,21 @@ __pycache__/
 
 # Local data: databases, signing key and uploads
 *.db
+*.db-*
+*.sqlite
+*.sqlite-*
 *.sqlite3
+*.sqlite3-*
+*.pem
+*.key
+*.p12
+*.jks
 OpenM_backend_python/database/
 OpenM_backend_python/state/
 OpenM_backend_python/storage/
 .env
+.env.*
+!.env.example
 
 # Flutter
 OpenM_frontend_flutter/build/
@@ -24,3 +34,4 @@ dist/
 deploy/data/
 .idea/
 .vscode/
+*.iml

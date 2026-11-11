@@ -4,13 +4,12 @@ import sys
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.auth import verify_password
+from app.check_initial_setup import check_initial_setup
 from app.database import Base, get_db
 from app.models import Employee
 from app.routers.auth import router as auth_router
@@ -20,12 +19,8 @@ setup_app.include_router(auth_router)
 
 
 @pytest.fixture()
-def setup_client():
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
+def setup_client(postgres_engine):
+    engine = postgres_engine
     Base.metadata.create_all(bind=engine)
     test_session = sessionmaker(bind=engine)
 
@@ -42,7 +37,6 @@ def setup_client():
             yield client, test_session
     finally:
         setup_app.dependency_overrides.clear()
-        engine.dispose()
 
 
 def _initial_setup_payload():
@@ -90,6 +84,20 @@ def test_initial_setup_creates_admin_and_disables_setup(setup_client):
     assert login_response.status_code == 200
 
 
+def test_startup_checker_matches_setup_status(setup_client, postgres_engine):
+    client, _ = setup_client
+    assert client.get("/auth/setup/status").json()["setup_required"] is True
+    assert "Initial setup is required" in check_initial_setup(postgres_engine)
+
+    assert client.post("/auth/setup", json=_initial_setup_payload()).status_code == 201
+    assert client.get("/auth/setup/status").json()["setup_required"] is False
+    assert "Initial setup is complete" in check_initial_setup(postgres_engine)
+
+
+def test_startup_checker_with_uninitialized_schema(postgres_engine):
+    assert "Database schema not initialized" in check_initial_setup(postgres_engine)
+
+
 def test_initial_setup_is_one_time(setup_client):
     client, _ = setup_client
 
@@ -109,3 +117,17 @@ def test_initial_setup_requires_strong_password(setup_client):
 
     assert response.status_code == 422
     assert client.get("/auth/setup/status").json()["setup_required"] is True
+
+
+def test_app_startup_and_health_use_postgresql(postgres_engine, monkeypatch):
+    import app.database
+
+    monkeypatch.setattr(app.database, "engine", postgres_engine)
+    monkeypatch.setattr(app.database, "SessionLocal", sessionmaker(bind=postgres_engine))
+    from app.main import app
+
+    with TestClient(app) as client:
+        assert client.get("/health").json() == {
+            "status": "healthy",
+            "database": "connected",
+        }

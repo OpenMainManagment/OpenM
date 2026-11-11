@@ -2,7 +2,6 @@ import os
 import sys
 
 import pytest
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from datetime import timedelta
 
@@ -31,8 +30,8 @@ from app.schemas import (
 
 
 @pytest.fixture()
-def db_session():
-    engine = create_engine("sqlite:///:memory:")
+def db_session(postgres_engine):
+    engine = postgres_engine
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)
     session = Session()
