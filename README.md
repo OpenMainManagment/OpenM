@@ -151,7 +151,11 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.source.yml ps
 Die App ist anschließend unter `http://localhost` erreichbar. Der erste Build
 kann wegen des Downloads von Flutter und Python-Abhängigkeiten länger dauern.
 Vorher `deploy/.env.example` nach `deploy/.env` kopieren und ein eigenes
-`OPENM_DB_PASSWORD` setzen. PostgreSQL-Daten liegen in einem Docker-Volume;
+`OPENM_DB_PASSWORD` setzen; die vorhandene `.env` bei Updates beibehalten.
+Im `deploy`-Ordner muss beim Start des Quellprojekts ausdrücklich
+`docker compose --env-file .env -f docker-compose.source.yml up -d --build`
+verwendet werden: `docker compose up` allein wählt die Konfiguration für das
+vorgebaute Serverpaket. PostgreSQL-Daten liegen in einem Docker-Volume;
 Uploads und Signaturschlüssel liegen unter `deploy/data/`.
 Für den Internetbetrieb ist ein HTTPS-Reverse-Proxy notwendig.
 

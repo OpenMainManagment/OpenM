@@ -1,10 +1,42 @@
 # OpenM mit Docker betreiben
 
+OpenM soll kleinen und mittelständischen Unternehmen den Einstieg in die
+Digitalisierung erleichtern. Die App bündelt wichtige Abläufe wie
+Kundenverwaltung, Projektplanung, Aufgaben und Dokumentenablage an einem
+zentralen Ort. Unternehmen können so Informationen und Arbeitsprozesse
+schrittweise digital organisieren.
+
 OpenM besteht aus einem Flutter-Webfrontend, nginx als Webserver und
 Reverse-Proxy, einem FastAPI-Backend und einer PostgreSQL-Datenbank. Docker
 Compose startet alle Komponenten gemeinsam. nginx leitet Anfragen unter
 `/api/` an das Backend weiter; das Backend muss nicht separat veröffentlicht
 werden.
+
+## Vorhandene Bilder und Beispieldaten
+
+Im Frontend-Ordner `OpenM_frontend_flutter/screenshots/` liegen drei
+Screenshots. Sie zeigen die Kundenunternehmen, die Projektübersicht und das
+Management-Dashboard. Die Screenshots veranschaulichen die Oberfläche anhand
+synthetischer Beispieldaten und enthalten keine Daten aus einer produktiven
+Installation.
+
+![Ansicht der Kundenunternehmen](../OpenM_frontend_flutter/screenshots/customer-companies.png)
+
+![Projektübersicht](../OpenM_frontend_flutter/screenshots/project-overview.png)
+
+![Management-Dashboard](../OpenM_frontend_flutter/screenshots/management-dashboard.png)
+
+Das Kanboard stellt Aufgaben nach ihrem Bearbeitungsstatus dar. Aufgaben können
+unter anderem Fälligkeiten und Zuständigkeiten enthalten und zwischen den
+Statusspalten verschoben werden. In einer laufenden Installation lädt das
+Kanboard seine Aufgaben aus dem Backend; beim ersten Start werden keine
+Dummy-Aufgaben automatisch angelegt.
+
+Für eine Vorführung können beispielsweise die folgenden Dummy-Aufgaben
+verwendet werden: „Angebot prüfen“ und „Zeichnungen freigeben“ stehen auf
+„In Arbeit“, während „Liefertermin bestätigen“ als überfällig markiert ist.
+Diese Einträge sind ausschließlich Beispieldaten und sollten nicht als reale
+Aufgaben oder Kundendaten verwendet werden.
 
 ## Variante A: Direkt aus dem GitHub-Quellcode
 
