@@ -1,9 +1,15 @@
 # OpenM
 
-Kunden-, Projekt- und Produktionsmanagement: Kundenverwaltung, Projektplanung
-(Gantt), Dokumentenablage, Aufgaben, Beschaffung und Produktion in einer
-gemeinsamen Oberfläche. Mehrere Organisationen (Mandanten) werden von einem
-Super-Admin verwaltet.
+OpenM ist eine modulare Management-Anwendung, die kleinen und
+mittelständischen Unternehmen dabei helfen soll, ihre Arbeitsabläufe zu
+digitalisieren. Sie bündelt Kundenverwaltung, Projektplanung mit Gantt,
+Dokumentenablage, Aufgaben, Beschaffung und Produktionsmanagement in einer
+gemeinsamen Oberfläche.
+
+Das Flutter-Frontend kommuniziert mit einem FastAPI-Backend, das die Daten in
+einer PostgreSQL-Datenbank speichert. OpenM unterstützt mehrere Organisationen
+(Mandanten) in einer Installation, die von einem Super-Administrator verwaltet
+werden.
 
 > OpenM befindet sich in aktiver Entwicklung.
 
@@ -37,45 +43,6 @@ verwendet.
 Einige Funktionen, insbesondere Produktionskennzahlen und Zeiterfassung,
 befinden sich noch in Entwicklung. Das Dashboard enthält teilweise
 Beispielkennzahlen.
-
-## Projekt auf GitHub veröffentlichen
-
-Der Projektordner enthält den vollständigen Quellcode und kann in ein anderes
-Verzeichnis kopiert werden. Lokale Daten, Passwörter, virtuelle Umgebungen
-und Build-Dateien gehören nicht in das Repository. Für ein neues, leeres
-GitHub-Repository im kopierten Ordner:
-
-```powershell
-git init
-git branch -M main
-git add .
-git commit -m "Initial OpenM version"
-git remote add origin <GITHUB-REPOSITORY-URL>
-git push -u origin main
-```
-
-`.gitignore` schließt unter anderem `.env`, Datenbanken, Uploads und
-Signaturschlüssel aus.
-
-### GitHub-Ordner prüfen und Docker-Images bauen
-
-Unter Windows prüft die Batchdatei im ursprünglichen OpenM-Quellordner die
-Frontend-, Backend- und Deployment-Dateien gegen diesen Ordner. Dafür werden
-Git und für den Docker-Build eine laufende Docker Engine mit Compose benötigt.
-
-```powershell
-cd D:\Projekte\OpenM
-.\deploy_openm.bat check
-.\deploy_openm.bat sync
-.\deploy_openm.bat build
-```
-
-`check` meldet Unterschiede ohne Änderungen. `sync` kopiert abweichende
-Quelldateien. `build` synchronisiert und baut danach die Docker-Images, ohne
-Container zu starten. Für den Build wird bei fehlendem `OPENM_DB_PASSWORD`
-ein temporärer Platzhalter verwendet, nicht für den Betrieb. Zusätzliche Quelldateien im Ziel werden gemeldet, aber
-nicht gelöscht. Lokale Daten, `.env`, Uploads und Build-Caches bleiben
-unverändert. GitHub-Commits werden nicht automatisch heruntergeladen.
 
 ## Inhalt
 
